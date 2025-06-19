@@ -2,16 +2,16 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { motion } from 'framer-motion'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -23,62 +23,78 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       })
 
-      if (res.ok) {
-        router.push('/dashboard')
-      } else {
+      if (!res.ok) {
         const data = await res.json()
         setError(data.message || 'Login failed')
+      } else {
+        router.push('/dashboard')
       }
-    } catch (err) {
-      setError('Something went wrong')
+    } catch {
+      setError('Unexpected error')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-black px-4">
-      <form
-        onSubmit={handleLogin}
+    <main className="flex items-center justify-center min-h-screen bg-black px-4">
+      <motion.form
+        onSubmit={handleSubmit}
         className="w-full max-w-md bg-gray-900 p-8 rounded-xl shadow-lg space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold text-white text-center">Login</h1>
+        <h2 className="text-3xl font-bold text-white text-center">Login</h2>
+        {error && (
+          <motion.p
+            className="text-red-500 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {error}
+          </motion.p>
+        )}
 
-        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
-        <input
+        <motion.input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-3 rounded bg-gray-800 text-white outline-none"
           required
+          className="w-full px-4 py-3 rounded bg-gray-800 text-white outline-none"
+          whileFocus={{ scale: 1.02 }}
         />
 
-        <input
+        <motion.input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-3 rounded bg-gray-800 text-white outline-none"
           required
+          className="w-full px-4 py-3 rounded bg-gray-800 text-white outline-none"
+          whileFocus={{ scale: 1.02 }}
         />
 
-        <button
+        <motion.button
           type="submit"
           disabled={loading}
-          className="w-full bg-white text-black py-3 rounded font-semibold hover:bg-gray-200 transition"
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded font-semibold"
+          whileTap={{ scale: 0.95 }}
         >
           {loading ? 'Logging in...' : 'Login'}
-        </button>
+        </motion.button>
 
-        <p className="text-sm text-gray-400 text-center">
+        <p className="text-center text-gray-400">
           Don’t have an account?{' '}
-          <Link href="/register" className="text-white underline">
+          <a
+            href="/register"
+            className="text-purple-400 hover:underline"
+          >
             Register
-          </Link>
+          </a>
         </p>
-      </form>
+      </motion.form>
     </main>
-  )
+)
 }
