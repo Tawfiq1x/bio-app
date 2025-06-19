@@ -8,21 +8,22 @@ generator client {
 }
 
 model User {
-  id            String      @id @default(uuid())
-  email         String      @unique
-  password      String?
-  name          String?
-  image         String?
-  emailVerified DateTime?
-  isAdmin       Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id             String       @id @default(uuid())
+  email          String       @unique
+  password       String?
+  name           String?
+  username       String       @unique
+  image          String?
+  emailVerified  DateTime?
+  isAdmin        Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  // Relations
-  profile     Profile?
-  userBadges  UserBadge[]
-  visits      Visit[]
-  linkClicks  LinkClick[]
+  profile        Profile?
+  userBadges     UserBadge[]
+  visits         Visit[]
+  linkClicks     LinkClick[]
+  settings       UserSettings?
 }
 
 model Profile {
@@ -31,48 +32,62 @@ model Profile {
   bio         String?
   avatar      String?
   banner      String?
-  socialLinks Json?    // Optional JSON for social links (e.g., Twitter, Instagram)
+  music       String?
+  socialLinks Json?
   createdAt   DateTime @default(now())
-  
+
   user        User     @relation(fields: [userId], references: [id])
 }
 
 model Badge {
-  id        String   @id @default(uuid())
-  name      String
-  icon      String   // Relative path to icon in public/badges/...
-  isGlobal  Boolean  @default(false)  // Global badges are visible to every user
-  createdAt DateTime @default(now())
+  id         String      @id @default(uuid())
+  name       String
+  icon       String      // e.g., /badges/global/star.png
+  isGlobal   Boolean      @default(false)
+  createdAt  DateTime     @default(now())
 
   userBadges UserBadge[]
 }
 
 model UserBadge {
-  id         String    @id @default(uuid())
-  user       User      @relation(fields: [userId], references: [id])
+  id         String   @id @default(uuid())
   userId     String
-  badge      Badge     @relation(fields: [badgeId], references: [id])
   badgeId    String
-  assignedAt DateTime  @default(now())
-  
+  assignedAt DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  badge      Badge    @relation(fields: [badgeId], references: [id])
+
   @@unique([userId, badgeId])
 }
 
 model Visit {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  visitedAt DateTime @default(now())
-  ipAddress String?
-  userAgent String?
+  id         String   @id @default(uuid())
+  userId     String
+  ipAddress  String?
+  userAgent  String?
+  visitedAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model LinkClick {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  clickedAt DateTime @default(now())
-  ipAddress String?
-  userAgent String?
-  platform  String?  // E.g., "twitter", "instagram"
+  id         String   @id @default(uuid())
+  userId     String
+  platform   String?   // e.g., "twitter", "github"
+  ipAddress  String?
+  userAgent  String?
+  clickedAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model UserSettings {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  darkMode       Boolean  @default(false)
+  isPublic       Boolean  @default(true)
+  notifyOnVisit  Boolean  @default(true)
+
+  user           User     @relation(fields: [userId], references: [id])
 }
