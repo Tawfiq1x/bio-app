@@ -1,68 +1,74 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { CheckCircle, XCircle } from 'lucide-react'
 
-export default function VerifyPage() {
-  const router = useRouter()
-  const [token, setToken] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
+export default function VerifyEmailPage() {
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token')
+  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setMessage(null)
-
-    try {
-      const res = await fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        setMessage('Verified! Redirecting...')
-        setTimeout(() => router.push('/dashboard'), 2000)
-      } else {
-        setMessage(data.message || 'Verification failed')
+  useEffect(() => {
+    const verify = async () => {
+      if (!token) {
+        setStatus('error')
+        return
       }
-    } catch (err) {
-      setMessage('Something went wrong')
-    } finally {
-      setLoading(false)
+
+      try {
+        const res = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        })
+
+        if (!res.ok) {
+          setStatus('error')
+        } else {
+          setStatus('success')
+        }
+      } catch {
+        setStatus('error')
+      }
     }
-  }
+
+    verify()
+  }, [token])
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-black px-4">
-      <form
-        onSubmit={handleVerify}
-        className="w-full max-w-md bg-gray-900 p-8 rounded-xl shadow-lg space-y-6"
+    <main className="flex items-center justify-center min-h-screen bg-black text-white px-4">
+      <motion.div
+        className="text-center space-y-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold text-white text-center">Verify Email</h1>
+        {status === 'verifying' && (
+          <>
+            <p className="text-xl animate-pulse">Verifying your email...</p>
+          </>
+        )}
 
-        {message && <p className="text-sm text-center text-white">{message}</p>}
+        {status === 'success' && (
+          <>
+            <CheckCircle className="text-green-500 w-16 h-16 mx-auto" />
+            <p className="text-xl font-bold">Email verified successfully!</p>
+            <a href="/login" className="text-purple-400 hover:underline">
+              Click here to login
+            </a>
+          </>
+        )}
 
-        <input
-          type="text"
-          placeholder="Verification Token"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          className="w-full px-4 py-3 rounded bg-gray-800 text-white outline-none"
-          required
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-white text-black py-3 rounded font-semibold hover:bg-gray-200 transition"
-        >
-          {loading ? 'Verifying...' : 'Verify'}
-        </button>
-      </form>
+        {status === 'error' && (
+          <>
+            <XCircle className="text-red-500 w-16 h-16 mx-auto" />
+            <p className="text-xl font-bold">Verification failed.</p>
+            <p>Please check your email link or contact support.</p>
+          </>
+        )}
+      </motion.div>
     </main>
   )
 }
