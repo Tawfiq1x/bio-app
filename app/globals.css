@@ -1,16 +1,46 @@
-/* app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Fonts (example - Inter + Pixel) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 :root {
-  --font-sans: 'Inter', sans-serif;
+  --background: #0e0e10;
+  --foreground: #ffffff;
+  --accent: #6366f1;
+  --danger: #ef4444;
+  --muted: #9ca3af;
 }
 
 body {
-  @apply bg-background text-foreground;
+  @apply bg-[var(--background)] text-[var(--foreground)] font-sans;
+  font-family: 'Inter', sans-serif;
 }
 
-html, body {
-  scroll-behavior: smooth;
+a {
+  @apply text-[var(--accent)] hover:underline;
+}
+
+button {
+  @apply px-4 py-2 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition;
+}
+
+input, textarea, select {
+  @apply bg-zinc-900 text-white border border-zinc-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent)];
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #222;
 }
