@@ -1,64 +1,176 @@
-// app/dashboard/customize/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import prisma from "@/lib/prisma";
+'use client'
 
-export default async function CustomizePage() {
-  const session = await getServerSession(authOptions);
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { Loader2 } from 'lucide-react'
 
-  if (!session?.user) {
-    return redirect("/login");
+export default function CustomizePage() {
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState({
+    displayName: '',
+    bio: '',
+    banner: '',
+    avatar: '',
+    animation: '',
+    font: '',
+    music: '',
+    background: '',
+  })
+  const [status, setStatus] = useState<'idle' | 'saving'>('idle')
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('/api/dashboard/profile')
+        const data = await res.json()
+        setForm({
+          displayName: data.displayName || '',
+          bio: data.bio || '',
+          banner: data.banner || '',
+          avatar: data.avatar || '',
+          animation: data.animation || '',
+          font: data.font || '',
+          music: data.music || '',
+          background: data.background || '',
+        })
+        setLoading(false)
+      } catch (error) {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId: session.user.id },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('saving')
+
+    await fetch('/api/dashboard/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
+
+    setStatus('idle')
+  }
+
+  if (loading) {
+    return (
+      <main className="flex justify-center items-center h-screen">
+        <Loader2 className="w-6 h-6 animate-spin text-white" />
+      </main>
+    )
+  }
 
   return (
-    <main className="p-4 text-white">
-      <h2 className="text-2xl font-bold mb-4">Customize Your Profile</h2>
-      <form>
-        <label className="block mb-2">
-          Bio:
+    <main className="p-4 max-w-3xl mx-auto text-white">
+      <motion.h1
+        className="text-3xl font-bold mb-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        Customize Your Profile
+      </motion.h1>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block">Display Name</label>
+          <input
+            name="displayName"
+            value={form.displayName}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-900 border border-gray-700"
+          />
+        </div>
+
+        <div>
+          <label className="block">Bio</label>
           <textarea
-            defaultValue={profile?.bio || ""}
-            className="w-full p-2 mt-1 rounded bg-gray-800 text-white"
-            rows={4}
+            name="bio"
+            value={form.bio}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-900 border border-gray-700"
           />
-        </label>
-        <label className="block mb-2">
-          Avatar URL:
+        </div>
+
+        <div>
+          <label className="block">Banner (.gif/.png/.jpg URL)</label>
           <input
-            type="text"
-            defaultValue={profile?.avatar || ""}
-            className="w-full p-2 mt-1 rounded bg-gray-800 text-white"
+            name="banner"
+            value={form.banner}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-900 border border-gray-700"
           />
-        </label>
-        <label className="block mb-2">
-          Banner URL:
+        </div>
+
+        <div>
+          <label className="block">Avatar (.gif/.png/.jpg URL)</label>
           <input
-            type="text"
-            defaultValue={profile?.banner || ""}
-            className="w-full p-2 mt-1 rounded bg-gray-800 text-white"
+            name="avatar"
+            value={form.avatar}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-900 border border-gray-700"
           />
-        </label>
-        <label className="block mb-2">
-          Music URL:
+        </div>
+
+        <div>
+          <label className="block">Font (e.g., 'Pixel', 'Inter')</label>
           <input
-            type="text"
-            defaultValue={profile?.music || ""}
-            className="w-full p-2 mt-1 rounded bg-gray-800 text-white"
+            name="font"
+            value={form.font}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-900 border border-gray-700"
           />
-        </label>
-        {/* You can add more customization fields here */}
+        </div>
+
+        <div>
+          <label className="block">Animation (e.g., 'typewriter')</label>
+          <input
+            name="animation"
+            value={form.animation}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-900 border border-gray-700"
+          />
+        </div>
+
+        <div>
+          <label className="block">Background (Image URL)</label>
+          <input
+            name="background"
+            value={form.background}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-900 border border-gray-700"
+          />
+        </div>
+
+        <div>
+          <label className="block">Background Music (MP3 URL)</label>
+          <input
+            name="music"
+            value={form.music}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-900 border border-gray-700"
+          />
+        </div>
+
         <button
           type="submit"
-          className="mt-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
+          disabled={status === 'saving'}
+          className="w-full bg-purple-600 hover:bg-purple-700 transition-colors p-2 rounded font-semibold flex items-center justify-center"
         >
-          Save Changes
+          {status === 'saving' ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            'Save Changes'
+          )}
         </button>
       </form>
     </main>
-  );
+  )
 }
