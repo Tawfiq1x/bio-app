@@ -8,17 +8,18 @@ generator client {
 }
 
 model User {
-  id             String       @id @default(uuid())
-  email          String       @unique
+  id             String         @id @default(uuid())
+  email          String         @unique
   password       String?
   name           String?
-  username       String       @unique
+  username       String         @unique
   image          String?
   emailVerified  DateTime?
-  isAdmin        Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  isAdmin        Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
+  // Relations
   profile        Profile?
   userBadges     UserBadge[]
   visits         Visit[]
@@ -36,13 +37,13 @@ model Profile {
   socialLinks Json?
   createdAt   DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Badge {
   id         String      @id @default(uuid())
   name       String
-  icon       String      // e.g., /badges/global/star.png
+  icon       String       // e.g., /badges/global/star.png
   isGlobal   Boolean      @default(false)
   createdAt  DateTime     @default(now())
 
@@ -55,8 +56,8 @@ model UserBadge {
   badgeId    String
   assignedAt DateTime @default(now())
 
-  user       User     @relation(fields: [userId], references: [id])
-  badge      Badge    @relation(fields: [badgeId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge      Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, badgeId])
 }
@@ -68,7 +69,7 @@ model Visit {
   userAgent  String?
   visitedAt  DateTime @default(now())
 
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model LinkClick {
@@ -79,7 +80,7 @@ model LinkClick {
   userAgent  String?
   clickedAt  DateTime @default(now())
 
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserSettings {
@@ -89,5 +90,5 @@ model UserSettings {
   isPublic       Boolean  @default(true)
   notifyOnVisit  Boolean  @default(true)
 
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
