@@ -1,6 +1,6 @@
 import { authOptions } from '@/lib/auth';
-import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
+import { getServerSession } from 'next-auth/next'; // important to import from next-auth/next in app dir
+import { NextRequest, NextResponse } from 'next/server';
 import {
   getTodayAnalytics,
   getMonthAnalytics,
@@ -11,9 +11,18 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { period: string } }
 ) {
-  const session = await getServerSession(req, authOptions); // ✅ FIXED: pass `req`
+  // Extract headers and cookies from NextRequest
+  const session = await getServerSession({
+    req: {
+      headers: req.headers,
+      // @ts-ignore
+      cookies: req.cookies,
+    },
+    // res is not needed here in middleware/api route GET
+    ...authOptions,
+  });
 
-  // ✅ Admin check
+  // Admin check
   if (!session || !session.user?.isAdmin) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
