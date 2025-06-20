@@ -13,6 +13,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
 
+  // ✅ Make sure user is admin
   if (!session || !session.user?.isAdmin) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
