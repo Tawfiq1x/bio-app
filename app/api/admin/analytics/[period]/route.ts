@@ -7,7 +7,7 @@ export async function GET(
   req: Request,
   { params }: { params: { period: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
