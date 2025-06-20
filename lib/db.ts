@@ -1,19 +1,12 @@
-// lib/db.ts
-
+// /lib/db.ts
 import { PrismaClient } from '@prisma/client';
 
-declare global {
-  // Prevent multiple instances of Prisma Client in development
-  // Fixes: "PrismaClient is already running" in Next.js dev mode
-  var prisma: PrismaClient | undefined;
-}
+const globalForPrisma = global as unknown as { prisma?: PrismaClient };
 
-const prisma =
-  global.prisma ||
+export const prisma =
+  globalForPrisma.prisma ??
   new PrismaClient({
-    log: ['query'],
+    log: ['query', 'info', 'warn', 'error'],
   });
 
-if (process.env.NODE_ENV !== 'production') global.prisma = prisma;
-
-export default prisma;
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
