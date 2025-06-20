@@ -1,61 +1,63 @@
-import { authOptions } from '@/lib/auth';
-import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
+// /lib/auth.ts
+import { PrismaClient } from '@prisma/client';
+import nodemailer from 'nodemailer';
+import { NextAuthOptions } from 'next-auth';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { period: string } }
-) {
-  const session = await getServerSession(authOptions);
+export const prisma = new PrismaClient();
 
-  if (!session || !session.user?.isAdmin) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-  }
+// NextAuth config example (আপনার অনুযায়ী কাস্টমাইজ করো)
+export const authOptions: NextAuthOptions = {
+  providers: [
+    // এখানে তোমার providers যোগ করো, যেমন Discord, Email, Credentials ইত্যাদি
+  ],
+  callbacks: {
+    async session({ session, user }) {
+      session.user.id = user.id;
+      return session;
+    },
+  },
+  // অন্য NextAuth অপশনগুলো এখানে থাকবে
+};
 
-  const { period } = params;
+// ইমেইল ভেরিফিকেশন টোকেন তৈরি
+export function generateEmailToken() {
+  return Math.random().toString(36).substring(2, 15);
+}
 
-  let analyticsData;
+// রিসেট টোকেন তৈরি
+export function generateResetToken() {
+  return Math.random().toString(36).substring(2, 15);
+}
 
-  try {
-    switch (period) {
-      case 'today':
-        // Replace with actual logic
-        analyticsData = {
-          views: 123,
-          clicks: 45,
-          users: 12,
-          message: 'Today’s analytics',
-        };
-        break;
+// Nodemailer সেটআপ (যদি ব্যবহার করো)
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_SERVER_HOST,
+  port: Number(process.env.EMAIL_SERVER_PORT),
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_SERVER_USER,
+    pass: process.env.EMAIL_SERVER_PASSWORD,
+  },
+});
 
-      case 'month':
-        analyticsData = {
-          views: 4500,
-          clicks: 1500,
-          users: 300,
-          message: 'This month’s analytics',
-        };
-        break;
+// ভেরিফিকেশন ইমেইল পাঠানোর ফাংশন
+export async function sendVerificationEmail(to: string, token: string) {
+  const url = `${process.env.NEXTAUTH_URL}/verify?token=${token}`;
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: 'Verify your email',
+    html: `<p>Click <a href="${url}">here</a> to verify your email.</p>`,
+  });
+}
 
-      case 'year':
-        analyticsData = {
-          views: 40200,
-          clicks: 12400,
-          users: 3800,
-          message: 'This year’s analytics',
-        };
-        break;
-
-      default:
-        return new Response(JSON.stringify({ error: 'Invalid period parameter' }), { status: 400 });
-    }
-
-    return new Response(JSON.stringify(analyticsData), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    console.error('Analytics error:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
-  }
+// পাসওয়ার্ড রিসেট ইমেইল পাঠানোর ফাংশন
+export async function sendResetEmail(to: string, token: string) {
+  const url = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: 'Reset your password',
+    html: `<p>Click <a href="${url}">here</a> to reset your password.</p>`,
+  });
 }
