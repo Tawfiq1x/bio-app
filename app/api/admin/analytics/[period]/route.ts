@@ -20,28 +20,28 @@ export async function GET(
   const { period } = params;
 
   try {
-    let analyticsData;
+    let data;
 
     switch (period) {
       case 'today':
-        analyticsData = await getTodayAnalytics();
+        data = await getTodayAnalytics();
         break;
       case 'month':
-        analyticsData = await getMonthAnalytics();
+        data = await getMonthAnalytics();
         break;
       case 'year':
-        analyticsData = await getYearAnalytics();
+        data = await getYearAnalytics();
         break;
       default:
         return new Response(JSON.stringify({ error: 'Invalid period' }), { status: 400 });
     }
 
-    return new Response(JSON.stringify(analyticsData), {
+    return new Response(JSON.stringify(data), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('Analytics fetch error:', err);
-    return new Response(JSON.stringify({ error: 'Server error' }), { status: 500 });
+    console.error('[Analytics API]', err);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
   }
 }
