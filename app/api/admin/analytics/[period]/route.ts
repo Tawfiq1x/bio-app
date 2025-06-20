@@ -11,9 +11,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { period: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(req, authOptions); // ✅ FIXED: pass `req`
 
-  // ✅ Make sure user is admin
+  // ✅ Admin check
   if (!session || !session.user?.isAdmin) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
